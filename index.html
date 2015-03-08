@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>komp-js</title>
+    <script src="js/lib/class.js"></script>
+    <script src="js/komp.js"></script>
+</head>
+<body>
+<script>
+    var TransformComponent = KOMP.Component.extend({
+        name: 'transform',
+        init: function(x, y) {
+            this.x = x;
+            this.y = y;
+        }
+    });
+    var VelocityComponent = KOMP.Component.extend({
+        name: 'velocity',
+        init: function(velocityX, velocityY) {
+            this.velocityX = velocityX;
+            this.velocityY = velocityY;
+        }
+    });
+
+    var MoveSystem = KOMP.System.extend({
+        moveNodeList: null,
+        addedToWorld: function() {
+            this.moveNodeList = this.world.getNodeList('transform', 'velocity');
+            this.moveNodeList.nodeAdded.add(this._onNodeAdded, this);
+            this.moveNodeList.nodeRemoved.add(this._onNodeRemoved, this);
+        },
+        removedFromWorld: function() {
+            this.moveNodeList.nodeAdded.remove(this._onNodeAdded);
+            this.moveNodeList.nodeRemoved.remove(this._onNodeRemoved);
+        },
+        _onNodeAdded: function(node) {
+        },
+        _onNodeRemoved: function(node) {
+        },
+        update: function(time) {
+            var nodes = this.moveNodeList.nodes;
+            var len = nodes.length;
+            for (var i = 0; i < len; i++) {
+                var node = nodes[i];
+                node.transform.x += node.velocity.velocityX * time;
+                node.transform.y += node.velocity.velocityY * time;
+            }
+        }
+    });
+
+    var world = new KOMP.World();
+    world.addSystem(new MoveSystem());
+
+    for (var j = 0; j < 100; j++) {
+        var entity = new KOMP.Entity();
+        entity.addComponent(new TransformComponent(10, 10));
+        entity.addComponent(new VelocityComponent(1, 2));
+        world.addEntity(entity);
+    }
+
+    for (j = 0; j < 500; j++) {
+        world.update(0.1);
+    }
+
+    console.log(world.entities[6].getComponent('transform').x + ", " + world.entities[6].getComponent('transform').y);
+</script>
+</body>
+</html>
