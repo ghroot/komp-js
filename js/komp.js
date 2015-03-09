@@ -23,10 +23,10 @@
                 }
             }
         },
-        dispatch: function(/* arguments */) {
-            var self = this;
+        dispatch: function(/* parameters */) {
+            var parameters = arguments;
             this.listeners.forEach(function(listener) {
-                listener.listener.apply(listener.self, arguments);
+                listener.listener.apply(listener.self, parameters);
             });
         }
     });
@@ -75,7 +75,7 @@
             var key = prototypeNode.componentNames.join("-");
             var nodeList = this.nodesLists[key];
             if (!nodeList) {
-                nodeList = new KOMP.NodeList(prototypeNode.componentNames);
+                nodeList = new KOMP.NodeList(prototypeNode.componentNames, nodeClass);
                 this.nodesLists[key] = nodeList;
             }
             return nodeList;
@@ -86,7 +86,8 @@
                     var nodeList = this.nodesLists[key];
                     if (nodeList.getNodeWihEntity(entity) === null &&
                         entity.hasComponents(nodeList.componentNames)) {
-                        var node = new KOMP.Node(entity);
+                        var nodeClass = nodeList.nodeClass;
+                        var node = new nodeClass(entity);
                         nodeList.componentNames.forEach(function(componentName) {
                             node[componentName] = entity.getComponent(componentName);
                         });
@@ -228,11 +229,14 @@
      * NodeList
      */
     KOMP.NodeList = Class.extend({
+        componentNames: null,
+        nodeClass: null,
         nodes: null,
         nodeAdded: null,
         nodeRemoved: null,
-        init: function(componentNames) {
+        init: function(componentNames, nodeClass) {
             this.componentNames = componentNames;
+            this.nodeClass = nodeClass;
             this.nodes = [];
             this.nodeAdded = new KOMP.Signal();
             this.nodeRemoved = new KOMP.Signal();
