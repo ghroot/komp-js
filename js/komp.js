@@ -69,13 +69,16 @@
         _onComponentRemoved: function(entity, component) {
             this._removeFromNodeLists(entity, true);
         },
-        getNodeList: function(nodeClass) {
-            var prototypeNode = new nodeClass();
-            prototypeNode.componentNames.sort();
-            var key = prototypeNode.componentNames.join("-");
+        getNodeList: function(/* componentNames */) {
+            var componentNames = [];
+            for (var i = 0; i < arguments.length; i++) {
+                componentNames.push(arguments[i]);
+            }
+            componentNames.sort();
+            var key = componentNames.join("-");
             var nodeList = this.nodesLists[key];
             if (!nodeList) {
-                nodeList = new KOMP.NodeList(prototypeNode.componentNames, nodeClass);
+                nodeList = new KOMP.NodeList(componentNames);
                 this.nodesLists[key] = nodeList;
             }
             return nodeList;
@@ -86,8 +89,7 @@
                     var nodeList = this.nodesLists[key];
                     if (nodeList.getNodeWihEntity(entity) === null &&
                         entity.hasComponents(nodeList.componentNames)) {
-                        var nodeClass = nodeList.nodeClass;
-                        var node = new nodeClass(entity);
+                        var node = new KOMP.Node(entity);
                         nodeList.componentNames.forEach(function(componentName) {
                             node[componentName] = entity.getComponent(componentName);
                         });
@@ -230,13 +232,11 @@
      */
     KOMP.NodeList = Class.extend({
         componentNames: null,
-        nodeClass: null,
         nodes: null,
         nodeAdded: null,
         nodeRemoved: null,
-        init: function(componentNames, nodeClass) {
+        init: function(componentNames) {
             this.componentNames = componentNames;
-            this.nodeClass = nodeClass;
             this.nodes = [];
             this.nodeAdded = new KOMP.Signal();
             this.nodeRemoved = new KOMP.Signal();

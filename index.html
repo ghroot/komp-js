@@ -22,27 +22,22 @@
         }
     });
 
-    var MoveNode = KOMP.Node.extend({
-        componentNames: ['transform', 'velocity']
-    });
-
     var MoveSystem = KOMP.System.extend({
-        moveNodeList: null,
         addedToWorld: function() {
-            this.moveNodeList = this.world.getNodeList(MoveNode);
-            this.moveNodeList.nodeAdded.add(this.onNodeAdded, this);
-            this.moveNodeList.nodeRemoved.add(this.onNodeRemoved, this);
+            this.nodeList = this.world.getNodeList('transform', 'velocity');
+            this.nodeList.nodeAdded.add(this.onNodeAdded, this);
+            this.nodeList.nodeRemoved.add(this.onNodeRemoved, this);
         },
         removedFromWorld: function() {
-            this.moveNodeList.nodeAdded.remove(this.onNodeAdded);
-            this.moveNodeList.nodeRemoved.remove(this.onNodeRemoved);
+            this.nodeList.nodeAdded.remove(this.onNodeAdded);
+            this.nodeList.nodeRemoved.remove(this.onNodeRemoved);
         },
         onNodeAdded: function(node) {
         },
         onNodeRemoved: function(node) {
         },
         update: function(time) {
-            this.moveNodeList.nodes.forEach(function(node) {
+            this.nodeList.nodes.forEach(function(node) {
                 node.transform.x += node.velocity.velocityX * time;
                 node.transform.y += node.velocity.velocityY * time;
             });
