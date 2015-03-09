@@ -69,16 +69,13 @@
         _onComponentRemoved: function(entity, component) {
             this._removeFromNodeLists(entity, true);
         },
-        getNodeList: function(/* componentNames */) {
-            var componentNames = [];
-            for (var i = 0; i < arguments.length; i++) {
-                componentNames.push(arguments[i]);
-            }
-            componentNames.sort();
-            var key = componentNames.join("-");
+        getNodeList: function(nodeClass) {
+            var prototypeNode = new nodeClass();
+            prototypeNode.componentNames.sort();
+            var key = prototypeNode.componentNames.join("-");
             var nodeList = this.nodesLists[key];
             if (!nodeList) {
-                nodeList = new KOMP.NodeList(componentNames);
+                nodeList = new KOMP.NodeList(prototypeNode.componentNames);
                 this.nodesLists[key] = nodeList;
             }
             return nodeList;

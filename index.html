@@ -22,10 +22,14 @@
         }
     });
 
+    var MoveNode = KOMP.Node.extend({
+        componentNames: ['transform', 'velocity']
+    });
+
     var MoveSystem = KOMP.System.extend({
         moveNodeList: null,
         addedToWorld: function() {
-            this.moveNodeList = this.world.getNodeList('transform', 'velocity');
+            this.moveNodeList = this.world.getNodeList(MoveNode);
             this.moveNodeList.nodeAdded.add(this.onNodeAdded, this);
             this.moveNodeList.nodeRemoved.add(this.onNodeRemoved, this);
         },
