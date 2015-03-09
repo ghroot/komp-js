@@ -24,9 +24,10 @@
             }
         },
         dispatch: function(/* arguments */) {
-            for (var i = 0; i < this.listeners.length; i++) {
-                this.listeners[i].listener.apply(this.listeners[i].self, arguments);
-            }
+            var self = this;
+            this.listeners.forEach(function(listener) {
+                listener.listener.apply(listener.self, arguments);
+            });
         }
     });
 
@@ -39,12 +40,14 @@
         entityRemoved: null,
         nodesLists: null,
         systems: null,
+        systemPriorities: null,
         init: function() {
             this.entities = [];
             this.entityAdded = new KOMP.Signal();
             this.entityRemoved = new KOMP.Signal();
             this.nodesLists = {};
             this.systems = {};
+            this.systemPriorities = [];
         },
         addEntity: function(entity) {
             this.entities.push(entity);
@@ -84,22 +87,13 @@
             for (var key in this.nodesLists) {
                 if (this.nodesLists.hasOwnProperty(key)) {
                     var nodeList = this.nodesLists[key];
-                    if (!nodeList.getNodeWihEntity(entity)) {
-                        var hasAllComponents = true;
+                    if (nodeList.getNodeWihEntity(entity) === null &&
+                        entity.hasComponents(nodeList.componentNames)) {
                         var node = new KOMP.Node(entity);
-                        for (var i = 0; i < nodeList.componentNames.length; i++) {
-                            var componentName = nodeList.componentNames[i];
-                            var component = entity.getComponent(componentName);
-                            if (component) {
-                                node[componentName] = component;
-                            } else {
-                                hasAllComponents = false;
-                                break;
-                            }
-                        }
-                        if (hasAllComponents) {
-                            nodeList.addNode(node);
-                        }
+                        nodeList.componentNames.forEach(function(componentName) {
+                            node[componentName] = entity.getComponent(componentName);
+                        });
+                        nodeList.addNode(node);
                     }
                 }
             }
@@ -109,16 +103,7 @@
                 if (this.nodesLists.hasOwnProperty(key)) {
                     var nodeList = this.nodesLists[key];
                     var node = nodeList.getNodeWihEntity(entity);
-                    var hasAllComponents = true;
-                    for (var i = 0; i < nodeList.componentNames.length; i++) {
-                        var componentName = nodeList.componentNames[i];
-                        var component = entity.getComponent(componentName);
-                        if (!component) {
-                            hasAllComponents = false;
-                            break;
-                        }
-                    }
-                    if (node && (!onlyIfInvalid || !hasAllComponents)) {
+                    if (node !== null && (!onlyIfInvalid || !entity.hasComponents(nodeList.componentNames))) {
                         nodeList.removeNode(node);
                     }
                 }
@@ -132,9 +117,9 @@
                 this.systems[priority] = systemsInPriority;
             }
             systemsInPriority.push(system);
-            system.world = this;
             system.preAddedToWorld(this);
             system.addedToWorld(this);
+            this.updateSystemPriorities();
         },
         removeSystem: function(system) {
             for (var priority in this.systems) {
@@ -145,22 +130,32 @@
                         systemsInPriority.splice(index, 1);
                         system.removedFromWorld(this);
                         system.postRemovedFromWorld(this);
-                        system.world = null;
+                        this.updateSystemPriorities();
                         break;
                     }
                 }
             }
         },
-        update: function(time) {
-            for (var priority  = 0; priority < 20; priority++) {
-                var systemsInPriority = this.systems[priority];
-                if (systemsInPriority) {
-                    for (var i = 0; i < systemsInPriority.length; i++) {
-                        var system = systemsInPriority[i];
-                        system.update(time);
+        updateSystemPriorities: function() {
+            this.systemPriorities.length = 0;
+            for (var priority in this.systems) {
+                if (this.systems.hasOwnProperty(priority)) {
+                    var systemsInPriority = this.systems[priority];
+                    if (this.systemPriorities.indexOf(priority) === -1 &&
+                        systemsInPriority.length > 0) {
+                        this.systemPriorities.push(priority);
                     }
                 }
             }
+        },
+        update: function(time) {
+            var self = this;
+            this.systemPriorities.forEach(function(priority) {
+                var systemsInPriority = self.systems[priority];
+                systemsInPriority.forEach(function(system) {
+                    system.update(time);
+                });
+            });
         }
     });
 
@@ -186,6 +181,18 @@
         },
         getComponent: function(name) {
             return this.components[name];
+        },
+        hasComponent: function(name) {
+            return this.getComponent(name) !== undefined;
+        },
+        hasComponents: function(names) {
+            var self = this;
+            names.forEach(function(name) {
+                if (!self.hasComponent(name)) {
+                    return false;
+                }
+            });
+            return true;
         }
     });
 
@@ -242,12 +249,11 @@
             this.nodeRemoved.dispatch(node);
         },
         getNodeWihEntity: function(entity) {
-            for (var i = 0; i < this.nodes.length; i++) {
-                var node = this.nodes[i];
+            this.nodes.forEach(function(node) {
                 if (node.entity === entity) {
                     return node;
                 }
-            }
+            });
             return null;
         }
     });

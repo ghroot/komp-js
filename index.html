@@ -26,25 +26,22 @@
         moveNodeList: null,
         addedToWorld: function() {
             this.moveNodeList = this.world.getNodeList('transform', 'velocity');
-            this.moveNodeList.nodeAdded.add(this._onNodeAdded, this);
-            this.moveNodeList.nodeRemoved.add(this._onNodeRemoved, this);
+            this.moveNodeList.nodeAdded.add(this.onNodeAdded, this);
+            this.moveNodeList.nodeRemoved.add(this.onNodeRemoved, this);
         },
         removedFromWorld: function() {
-            this.moveNodeList.nodeAdded.remove(this._onNodeAdded);
-            this.moveNodeList.nodeRemoved.remove(this._onNodeRemoved);
+            this.moveNodeList.nodeAdded.remove(this.onNodeAdded);
+            this.moveNodeList.nodeRemoved.remove(this.onNodeRemoved);
         },
-        _onNodeAdded: function(node) {
+        onNodeAdded: function(node) {
         },
-        _onNodeRemoved: function(node) {
+        onNodeRemoved: function(node) {
         },
         update: function(time) {
-            var nodes = this.moveNodeList.nodes;
-            var len = nodes.length;
-            for (var i = 0; i < len; i++) {
-                var node = nodes[i];
+            this.moveNodeList.nodes.forEach(function(node) {
                 node.transform.x += node.velocity.velocityX * time;
                 node.transform.y += node.velocity.velocityY * time;
-            }
+            });
         }
     });
 
