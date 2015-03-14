@@ -10,5 +10,8 @@ KOMP.EntityState = Class.extend({
     },
     addComponent: function(component) {
         this.components.push(component);
+    },
+    hasComponent: function(component) {
+        return this.components.indexOf(component) >= 0;
     }
 });

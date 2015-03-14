@@ -15,6 +15,7 @@ KOMP.EntityStateMachine = Class.extend({
         return state;
     },
     changeState: function(name) {
+        var self = this;
         var previousState = this.currentState;
         var nextState = this.states[name];
         if (nextState === previousState) {
@@ -23,11 +24,10 @@ KOMP.EntityStateMachine = Class.extend({
         if (previousState !== null) {
             previousState.components.forEach(function(component) {
                 if (!nextState.hasComponent(component.name)) {
-                    this.entity.removeComponent(component);
+                    self.entity.removeComponent(component);
                 }
             });
         }
-        var self = this;
         nextState.components.forEach(function(component) {
             if (!self.entity.hasComponent(component.name)) {
                 self.entity.addComponent(component);
