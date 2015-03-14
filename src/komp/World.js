@@ -1,37 +1,3 @@
-'use strict';
-
-var KOMP = {};
-
-KOMP.VERSION = "v1.0.0";
-
-/**
- * Signal
- */
-KOMP.Signal = Class.extend({
-    listeners: null,
-    init: function() {
-        this.listeners = [];
-    },
-    add: function(listener, self) {
-        self = self || listener;
-        this.listeners.push({listener: listener, self: self});
-    },
-    remove: function(listener) {
-        for (var i = this.listeners.length - 1; i >= 0; i--) {
-            if (this.listeners[i].listener == listener) {
-                this.listeners.splice(i, 1);
-                break;
-            }
-        }
-    },
-    dispatch: function(/* parameters */) {
-        var parameters = arguments;
-        this.listeners.forEach(function(listener) {
-            listener.listener.apply(listener.self, parameters);
-        });
-    }
-});
-
 /**
  * World
  */
@@ -49,6 +15,8 @@ KOMP.World = Class.extend({
         this.nodesLists = {};
         this.systems = {};
         this.systemPriorities = [];
+
+        KOMP.sayHello();
     },
     addEntity: function(entity) {
         this.entities.push(entity);
@@ -137,6 +105,17 @@ KOMP.World = Class.extend({
             }
         }
     },
+    hasSystem: function(system) {
+        for (var priority in this.systems) {
+            if (this.systems.hasOwnProperty(priority)) {
+                var systemsInPriority = this.systems[priority];
+                if (systemsInPriority.indexOf(system) >= 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    },
     updateSystemPriorities: function() {
         this.systemPriorities.length = 0;
         for (var priority in this.systems) {
@@ -157,115 +136,5 @@ KOMP.World = Class.extend({
                 system.update(time);
             });
         });
-    }
-});
-
-/**
- * Entity
- */
-KOMP.Entity = Class.extend({
-    components: null,
-    componentAdded: null,
-    componentRemoved: null,
-    init: function() {
-        this.components = {};
-        this.componentAdded = new KOMP.Signal();
-        this.componentRemoved = new KOMP.Signal();
-    },
-    addComponent: function(component) {
-        this.components[component.name] = component;
-        this.componentAdded.dispatch(this, component);
-    },
-    removeComponent: function(component) {
-        delete this.components[component.name];
-        this.componentRemoved.dispatch(this, component);
-    },
-    getComponent: function(name) {
-        return this.components[name];
-    },
-    hasComponent: function(name) {
-        return this.getComponent(name) !== undefined;
-    },
-    hasComponents: function(names) {
-        var self = this;
-        names.forEach(function(name) {
-            if (!self.hasComponent(name)) {
-                return false;
-            }
-        });
-        return true;
-    }
-});
-
-/**
- * Component
- */
-KOMP.Component = Class.extend({
-    name: '',
-    init: function(name) {
-        this.name = name;
-    }
-});
-
-/**
- * System
- */
-KOMP.System = Class.extend({
-    world: null,
-    init: function() {
-    },
-    preAddedToWorld: function(world) {
-        this.world = world;
-    },
-    addedToWorld: function(world) {
-    },
-    removedFromWorld: function(world) {
-    },
-    postRemovedFromWorld: function(world) {
-        this.world = null;
-    },
-    update: function(time) {
-    }
-});
-
-/**
- * NodeList
- */
-KOMP.NodeList = Class.extend({
-    componentNames: null,
-    nodes: null,
-    nodeAdded: null,
-    nodeRemoved: null,
-    init: function(componentNames) {
-        this.componentNames = componentNames;
-        this.nodes = [];
-        this.nodeAdded = new KOMP.Signal();
-        this.nodeRemoved = new KOMP.Signal();
-    },
-    addNode: function(node) {
-        this.nodes.push(node);
-        this.nodeAdded.dispatch(node);
-    },
-    removeNode: function(node) {
-        this.nodes.splice(this.nodes.indexOf(node), 1);
-        this.nodeRemoved.dispatch(node);
-    },
-    getNodeWihEntity: function(entity) {
-        this.nodes.forEach(function(node) {
-            if (node.entity === entity) {
-                return node;
-            }
-        });
-        return null;
-    }
-});
-
-/**
- * Node
- */
-KOMP.Node = Class.extend({
-    entity: null,
-    init: function(entity) {
-        this.entity = entity;
     }
 });
